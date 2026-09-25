@@ -1,1 +1,7 @@
-.worktrees/
+node_modules/
+.next/
+.data/
+.env.local
+.env.production
+*.tsbuildinfo
+next-env.d.ts
