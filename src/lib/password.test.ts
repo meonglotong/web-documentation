@@ -3,6 +3,7 @@ import { hashPassword, verifyPassword } from "./password";
 
 it("round-trips a password", async () => {
   const hash = await hashPassword("rahasia-123");
+  expect(hash.startsWith("$argon2id$")).toBe(true);
   await expect(verifyPassword(hash, "rahasia-123")).resolves.toBe(true);
 });
 
