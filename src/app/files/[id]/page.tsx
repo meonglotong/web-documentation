@@ -32,7 +32,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ id:
         {preview === "image" ? (
           <img src={`/api/files/${id}/download`} alt={detail.file.name} style={{ maxWidth: "100%", borderRadius: 8 }} />
         ) : preview === "iframe" ? (
-          <iframe src={`/api/files/${id}/download`} style={{ width: "100%", height: 600, border: "1px solid var(--border)", borderRadius: 8 }} title={detail.file.name} />
+          <iframe src={`/api/files/${id}/download`} sandbox="" style={{ width: "100%", height: 600, border: "1px solid var(--border)", borderRadius: 8 }} title={detail.file.name} />
         ) : null}
         <h2 style={{ marginTop: 32 }}>Riwayat versi</h2>
         <VersionTable id={id} admin={admin} versions={detail.versions} currentVersion={detail.file.currentVersion} />
