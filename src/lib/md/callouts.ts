@@ -4,8 +4,9 @@ import type { MarkedExtension, Tokens } from "marked";
 const KINDS: Record<string, string> = { info: "callout-info", warning: "callout-warn", danger: "callout-danger" };
 
 // Shape of the token produced by the tokenizer below; the renderer receives
-// Tokens.Generic, so it casts locally.
-interface CalloutToken {
+// Tokens.Generic, so it casts locally. Exported so the TOC walk can re-lex
+// callout bodies the same way the renderer does.
+export interface CalloutToken {
   type: string;
   raw: string;
   kind: string;

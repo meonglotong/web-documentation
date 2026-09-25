@@ -1,7 +1,7 @@
 import { Marked } from "marked";
-import type { Tokens } from "marked";
+import type { Token, Tokens } from "marked";
 import { slugify } from "./slugify";
-import { calloutExtension } from "./callouts";
+import { calloutExtension, type CalloutToken } from "./callouts";
 
 export interface TocItem { level: 2 | 3; text: string; id: string }
 
@@ -43,18 +43,42 @@ export function renderMarkdown(md: string): { html: string; toc: TocItem[] } {
   renderedCounts.clear();
   const toc: TocItem[] = [];
   const tocCounts = new Map<string, number>();
-  // Mirror the renderer's id assignment (every heading consumes a counter
-  // slot) so TOC ids always match the emitted heading ids.
-  for (const token of marked.lexer(md)) {
-    if (token.type !== "heading") continue;
-    const id = dedupedId(headingBase(token.text), tocCounts);
-    if (token.depth === 2 || token.depth === 3) {
-      toc.push({ level: token.depth as 2 | 3, text: token.text, id });
+  // Mirror the renderer's id assignment in document order (every heading
+  // consumes a counter slot, including headings nested in blockquotes, list
+  // items, and callout bodies) so TOC ids always match the emitted html ids.
+  forEachHeading(marked.lexer(md), (heading) => {
+    const id = dedupedId(headingBase(heading.text), tocCounts);
+    if (heading.depth === 2 || heading.depth === 3) {
+      toc.push({ level: heading.depth as 2 | 3, text: heading.text, id });
     }
-  }
+  });
   return { html: marked.parse(md, { async: false }) as string, toc };
 }
 
 export function markedWithCallouts(md: string): string {
   return marked.parse(md, { async: false }) as string;
+}
+
+// Visit every heading token in document order, recursing into exactly the
+// containers marked's parser recurses into when rendering (blockquote and
+// list children, and re-lexed callout bodies).
+function forEachHeading(tokens: Token[], visit: (heading: Tokens.Heading) => void): void {
+  for (const token of tokens) {
+    switch (token.type) {
+      case "heading":
+        visit(token as Tokens.Heading);
+        break;
+      case "blockquote":
+        forEachHeading((token as Tokens.Blockquote).tokens, visit);
+        break;
+      case "list":
+        for (const item of (token as Tokens.List).items) {
+          forEachHeading(item.tokens, visit);
+        }
+        break;
+      case "callout":
+        forEachHeading(marked.lexer((token as CalloutToken).body), visit);
+        break;
+    }
+  }
 }

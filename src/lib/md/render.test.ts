@@ -28,3 +28,24 @@ describe("renderMarkdown", () => {
     expect(toc.map((t) => t.id)).toEqual(["a", "a-2"]);
   });
 });
+
+describe("nested headings", () => {
+  const htmlHeadingIds = (html: string) =>
+    Array.from(html.matchAll(/<h[1-6] id="([^"]+)"/g)).map((m) => m[1]);
+
+  it("counts a heading nested in a callout body", () => {
+    const { html, toc } = renderMarkdown("> [!info]\n> ## Alpha\n\n## Alpha");
+    expect(toc.map((t) => t.id)).toEqual(["alpha", "alpha-2"]);
+    expect(toc.map((t) => t.id)).toEqual(htmlHeadingIds(html));
+  });
+  it("counts a heading nested in a blockquote", () => {
+    const { html, toc } = renderMarkdown("> ## Alpha\n\n## Alpha");
+    expect(toc.map((t) => t.id)).toEqual(["alpha", "alpha-2"]);
+    expect(toc.map((t) => t.id)).toEqual(htmlHeadingIds(html));
+  });
+  it("counts a heading nested in a list item", () => {
+    const { html, toc } = renderMarkdown("- ## Alpha\n\n## Alpha");
+    expect(toc.map((t) => t.id)).toEqual(["alpha", "alpha-2"]);
+    expect(toc.map((t) => t.id)).toEqual(htmlHeadingIds(html));
+  });
+});
